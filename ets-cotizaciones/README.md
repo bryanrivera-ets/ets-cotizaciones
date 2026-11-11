@@ -9,7 +9,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 | Fase | Descripción | Estado |
 |---|---|---|
 | 1 | Base del proyecto, estructura, README, resumen de referencias | ✅ |
-| 2 | Modelos de datos y cálculos (Vitest) | pendiente |
+| 2 | Modelos de datos y cálculos (Vitest) | ✅ |
 | 3 | Generación de PDF de los 4 tipos | pendiente |
 | 4 | Formularios con vista previa y guardado local | pendiente |
 | 5 | Biblioteca de sistemas, términos y perfiles | pendiente |
