@@ -11,7 +11,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 | 1 | Base del proyecto, estructura, README, resumen de referencias | ✅ |
 | 2 | Modelos de datos y cálculos (Vitest) | ✅ |
 | 3 | Generación de PDF de los 4 tipos ([resultados](./docs/fase3/README.md)) | ✅ |
-| 4 | Formularios con vista previa y guardado local | pendiente |
+| 4 | Formularios con vista previa y guardado local | ✅ |
 | 5 | Biblioteca de sistemas, términos y perfiles | pendiente |
 | 6 | Firebase: login, sincronización, numeración, reglas | pendiente |
 | 7 | Historial, estados, duplicar, revisiones, email | pendiente |

@@ -11,7 +11,7 @@ import { Font } from '@react-pdf/renderer'
  * | Pie de página               | Aharoni Bold                 | Montserrat Bold          |
  * | Texto T&M                   | Calibri                      | Carlito (mismas medidas) |
  * | Firma Eric Rivera           | Bradley Hand ITC             | Kalam                    |
- * | Firma Carlos A. Soto        | Dreaming Outloud Script Pro  | Playwrite US Modern      |
+ * | Firma Carlos A. Soto        | Dreaming Outloud Script Pro  | Dancing Script           |
  */
 export const FONT = {
   body: 'Barlow Semi Condensed',
@@ -23,7 +23,7 @@ export const FONT = {
 /** Clave guardada en cada firmante → familia manuscrita. */
 export const SIGNATURE_FONTS: Record<string, { family: string; label: string; size: number }> = {
   'signature-1': { family: 'Kalam', label: 'Kalam', size: 14 },
-  'signature-2': { family: 'Playwrite US Modern', label: 'Playwrite US Modern', size: 11.5 },
+  'signature-2': { family: 'Dancing Script', label: 'Dancing Script', size: 15 },
 }
 
 export const signatureFontOf = (key: string) => SIGNATURE_FONTS[key] ?? SIGNATURE_FONTS['signature-1']
@@ -50,7 +50,7 @@ const FILES: { family: string; fonts: { file: string; fontWeight?: 'normal' | 'b
   { family: FONT.title, fonts: [{ file: 'Arimo-Bold.ttf', fontWeight: 'bold' }] },
   { family: FONT.footer, fonts: [{ file: 'Montserrat-Bold.ttf', fontWeight: 'bold' }] },
   { family: 'Kalam', fonts: [{ file: 'Kalam-Regular.ttf' }] },
-  { family: 'Playwrite US Modern', fonts: [{ file: 'PlaywriteUSModern-Regular.ttf' }] },
+  { family: 'Dancing Script', fonts: [{ file: 'DancingScript-Regular.ttf' }] },
 ]
 
 let registered = false
