@@ -8,6 +8,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    // 'threads' evita el error "VirtualAlloc failed" que dan los procesos 'forks' en algunos Windows
+    pool: 'threads',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
   },
 })
