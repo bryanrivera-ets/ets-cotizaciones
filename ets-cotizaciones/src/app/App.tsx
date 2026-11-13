@@ -4,6 +4,8 @@ import { useAuth } from '../features/auth/context.ts'
 import { LibraryProvider } from '../features/library/LibraryProvider.tsx'
 import { QuoteListPage } from '../features/quotes/QuoteListPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
+import { InstallPage } from '../features/pwa/InstallPage.tsx'
+import { InstallButton, UpdatePrompt } from '../features/pwa/PwaUi.tsx'
 import { SyncStatus } from '../features/sync/SyncStatus.tsx'
 
 // El editor incluye el generador de PDF (pesado): se carga solo al abrir una cotización
@@ -45,7 +47,27 @@ export default function App() {
   const edit = /^\/cotizacion\/([\w-]+)$/.exec(path)
   const settings = /^\/configuracion(?:\/([\w-]+))?$/.exec(path)
 
+  // Las instrucciones de instalación se ven aunque no se haya iniciado sesión
+  if (path === '/instalar')
+    return (
+      <div className="app">
+        <header className="topbar">
+          <a href="#/" className="brand">
+            <img src={`${import.meta.env.BASE_URL}logo-ets.png`} alt="" />
+            <span>Cotizaciones</span>
+          </a>
+          <nav className="nav">
+            <a href="#/">← Volver</a>
+          </nav>
+        </header>
+        <InstallPage />
+        <UpdatePrompt />
+      </div>
+    )
+
   return (
+    <>
+    <UpdatePrompt />
     <AuthGate>
       <LibraryProvider>
         <div className="app">
@@ -63,6 +85,7 @@ export default function App() {
                 Configuración
               </a>
             </nav>
+            <InstallButton />
             <UserMenu />
           </header>
           <main>
@@ -79,5 +102,6 @@ export default function App() {
         </div>
       </LibraryProvider>
     </AuthGate>
+    </>
   )
 }

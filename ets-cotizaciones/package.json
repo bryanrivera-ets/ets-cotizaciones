@@ -15,7 +15,10 @@
     "pdf:compare": "python3 scripts/compare-examples.py",
     "test:rules": "firebase emulators:exec --only firestore --project demo-ets-rules \"vitest run --config vitest.rules.config.ts\"",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-ets",
-    "dev:emu": "vite --mode emulators"
+    "dev:emu": "vite --mode emulators",
+    "deploy": "npm run build && firebase deploy --only hosting,firestore:rules",
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "firebase:login": "firebase login"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.9.0",
@@ -37,6 +40,8 @@
     "tsx": "^4.23.15",
     "typescript": "~7.0.2",
     "vite": "^8.3.6",
-    "vitest": "^5.1.0"
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0",
+    "workbox-window": "^7.4.1"
   }
 }

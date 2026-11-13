@@ -182,6 +182,9 @@ function LoginPage() {
         <button type="button" className="link" onClick={reset}>
           Olvidé mi contraseña
         </button>
+        <a className="link login__install" href="#/instalar">
+          ⤓ Cómo instalar la app en este dispositivo
+        </a>
       </form>
     </div>
   )

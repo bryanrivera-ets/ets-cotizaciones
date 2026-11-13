@@ -15,7 +15,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 | 5 | Biblioteca de sistemas, catálogo T&M, términos y perfiles (Configuración) | ✅ |
 | 6 | Firebase: login, sincronización offline, numeración, reglas ([configurar](./docs/FIREBASE-CONFIGURACION.md)) | ✅ (falta conectar tu proyecto) |
 | 7 | Historial con búsqueda, estados, duplicar, revisiones, registro de cambios, enviar por email | ✅ |
-| 8 | PWA, offline completo y publicación | pendiente |
+| 8 | PWA (instalar en desktop e iPad), offline completo y publicación ([cómo publicar](./docs/PUBLICAR.md)) | ✅ (falta correr `npm run deploy` con tu cuenta) |
 
 ## Requisitos
 
@@ -36,9 +36,14 @@ npm run preview      # sirve la versión de producción localmente
 npm run test:rules   # prueba las reglas de seguridad de Firestore (inicia el emulador; requiere Java)
 npm run emulators    # emuladores de Firebase (auth + firestore) para desarrollo
 npm run dev:emu      # la app conectada a los emuladores (en otra ventana)
+npm run deploy       # compila y publica en Firebase Hosting + reglas (antes: npx firebase login)
 npm run pdf:examples # genera los PDF de los 6 ejemplos en out/pdf/
 npm run pdf:compare  # compara out/pdf/ con referencia/ejemplos/ (Python 3 + pymupdf + Pillow)
 ```
+
+## Publicación
+
+La app se publica en **https://ets-cotizaciones.web.app** con `npm run deploy`. Pasos e instalación en desktop / iPad: [`docs/PUBLICAR.md`](./docs/PUBLICAR.md).
 
 ## Firebase
 
