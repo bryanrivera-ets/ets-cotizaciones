@@ -27,6 +27,8 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
+  deleteField,
   type DocumentSnapshot,
   type Timestamp,
 } from 'firebase/firestore'
@@ -43,6 +45,9 @@ const iso = (t: Timestamp | null | undefined) => (t ? t.toDate().toISOString() :
 type QuoteDoc = {
   body: Omit<Quote, 'number'>
   number: QuoteNumber
+  locked?: boolean
+  supersededBy?: string
+  revisionOf?: string
   createdBy?: string
   updatedAt?: Timestamp
   updatedBy?: string
@@ -62,6 +67,9 @@ function toStored(snap: DocumentSnapshot): StoredQuote | null {
     updatedBy: d.updatedBy,
     createdBy: d.createdBy,
     pending: snap.metadata.hasPendingWrites,
+    locked: d.locked === true,
+    supersededBy: d.supersededBy,
+    revisionOf: d.revisionOf,
   }
 }
 
@@ -113,8 +121,42 @@ export const firebaseBackend: Backend = {
     async setNumber(id, number) {
       void updateDoc(doc(fb().db, 'quotes', id), { number, updatedAt: serverTimestamp(), updatedBy: me() })
     },
+    async createRevision(prevId, rev) {
+      const { db } = fb()
+      const { body, number } = splitQuote(rev)
+      await runTransaction(db, async (tx) => {
+        const prevRef = doc(db, 'quotes', prevId)
+        const prev = await tx.get(prevRef)
+        if (!prev.exists()) throw new Error('La cotización no existe')
+        if ((prev.data() as QuoteDoc).locked) throw new Error('Ya existe una revisión más nueva de esta cotización.')
+        tx.set(doc(db, 'quotes', rev.id), {
+          body,
+          number,
+          revisionOf: prevId,
+          createdAt: serverTimestamp(),
+          createdBy: me(),
+          updatedAt: serverTimestamp(),
+          updatedBy: me(),
+        })
+        tx.update(prevRef, { locked: true, supersededBy: rev.id, updatedAt: serverTimestamp(), updatedBy: me() })
+      })
+    },
     async remove(id) {
-      void deleteDoc(doc(fb().db, 'quotes', id))
+      const { db } = fb()
+      const snap = await getDoc(doc(db, 'quotes', id))
+      const d = snap.exists() ? (snap.data() as QuoteDoc) : null
+      if (d?.locked) throw new Error('No se puede eliminar una versión anterior; elimina primero la revisión más nueva.')
+      const batch = writeBatch(db)
+      batch.delete(doc(db, 'quotes', id))
+      // Si era una revisión, la versión anterior vuelve a ser editable
+      if (d?.revisionOf)
+        batch.update(doc(db, 'quotes', d.revisionOf), {
+          locked: false,
+          supersededBy: deleteField(),
+          updatedAt: serverTimestamp(),
+          updatedBy: me(),
+        })
+      void batch.commit()
     },
   },
 

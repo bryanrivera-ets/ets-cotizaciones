@@ -61,7 +61,9 @@ export function TextArea({ value, onChange, id, ariaLabel, rows = 2 }: { value: 
     const el = ref.current
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight + 2}px`
+    // Si todavía no está visible (ej. dentro de un diálogo que se está abriendo) mide 0: se deja el alto por filas
+    if (el.scrollHeight > 0) el.style.height = `${el.scrollHeight + 2}px`
+    else el.style.height = ''
   }, [value])
   return <textarea ref={ref} id={id} rows={rows} value={value} aria-label={ariaLabel} onChange={(e) => onChange(e.target.value)} />
 }

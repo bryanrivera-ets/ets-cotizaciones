@@ -29,17 +29,27 @@ service cloud.firestore {
       allow delete: if isAllowed() && myEmail() != email;
     }
 
-    // Cotizaciones: { body, number, createdAt, createdBy, updatedAt, updatedBy }
+    // Cotizaciones: { body, number, locked, supersededBy, revisionOf, createdAt, createdBy, updatedAt, updatedBy }
+    function isLocked(data) {
+      return data.get('locked', false) == true;
+    }
+
     match /quotes/{quoteId} {
       allow read: if isAllowed();
       allow create: if isAllowed()
         && request.resource.data.keys().hasAll(['body', 'number'])
         && request.resource.data.body.id == quoteId
-        && request.resource.data.updatedBy == myEmail();
+        && request.resource.data.updatedBy == myEmail()
+        && !isLocked(request.resource.data);
+      // Una versión anterior (bloqueada por una revisión) no se puede modificar:
+      // solo se le puede quitar o poner el bloqueo.
       allow update: if isAllowed()
         && request.resource.data.body.id == quoteId
-        && request.resource.data.updatedBy == myEmail();
-      allow delete: if isAllowed();
+        && request.resource.data.updatedBy == myEmail()
+        && (!isLocked(resource.data)
+            || request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['locked', 'supersededBy', 'updatedAt', 'updatedBy']));
+      allow delete: if isAllowed() && !isLocked(resource.data);
     }
 
     // Biblioteca: systems, materials, positions, terms, profiles, signers

@@ -3,7 +3,7 @@ import { defaultPdfFileName, formatQuoteNumber } from '../../../domain/format.ts
 import { systemFromSection } from '../../../domain/library.ts'
 import type { ProposalTitle, Quote, QuoteStatus, RichLine, ScopeItem, ScopeLevel } from '../../../domain/types.ts'
 import { SCOPE_BULLETS } from '../../../domain/types.ts'
-import { Button, Card, Field, NumberInput, RowActions, Select, TextInput } from '../../../ui/controls.tsx'
+import { Button, Card, Field, RowActions, Select, TextInput } from '../../../ui/controls.tsx'
 import { move } from '../../../ui/list.ts'
 import { useState } from 'react'
 import { backend } from '../../../services/backend/index.ts'
@@ -25,9 +25,21 @@ export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) 
           {(id) => <input id={id} type="date" value={h.date} onChange={(e) => e.target.value && setH('date')(e.target.value)} />}
         </Field>
         <Field label="Quote No." span2>
-          {() => <QuoteNumberField quote={quote} update={update} />}
+          {() => <QuoteNumberField quote={quote} />}
         </Field>
         <Field label="Contact">{(id) => <TextInput id={id} value={h.contact} onChange={setH('contact')} placeholder="Eng. …" />}</Field>
+        <Field label="Email del contacto" hint="Para enviarle la cotización (no sale en el PDF)">
+          {(id) => (
+            <input
+              id={id}
+              type="email"
+              inputMode="email"
+              value={h.contactEmail ?? ''}
+              placeholder="nombre@empresa.com"
+              onChange={(e) => update((d) => void (d.header.contactEmail = e.target.value || undefined))}
+            />
+          )}
+        </Field>
         <Field label="Contractor">{(id) => <TextInput id={id} value={h.contractor} onChange={setH('contractor')} />}</Field>
         <Field label="Project/Area" wide hint="Se imprime en mayúsculas">
           {(id) => <TextInput id={id} value={h.projectArea} onChange={setH('projectArea')} />}
@@ -291,7 +303,7 @@ export function SystemPicker({
  * Muestra el número. Si todavía no tiene, se asigna solo al haber conexión;
  * "Reservar número" lo pide en ese momento (necesita internet).
  */
-function QuoteNumberField({ quote, update }: { quote: Quote; update: Update }) {
+function QuoteNumberField({ quote }: { quote: Quote }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const reserve = async () => {
@@ -309,11 +321,6 @@ function QuoteNumberField({ quote, update }: { quote: Quote; update: Update }) {
       setBusy(false)
     }
   }
-  const setRevision = (revision: number) => {
-    const number = { ...quote.number, revision }
-    update((d) => void (d.number = number))
-    void backend.quotes.setNumber(quote.id, number)
-  }
   return (
     <div className="quote-no">
       <output className="quote-no__value">{formatQuoteNumber(quote.number, quote.type === 'tm')}</output>
@@ -324,12 +331,7 @@ function QuoteNumberField({ quote, update }: { quote: Quote; update: Update }) {
           </Button>
           <small className="hint">Sin número todavía: se asigna solo al haber conexión.</small>
         </>
-      ) : (
-        <label className="quote-no__rev">
-          REV
-          <NumberInput ariaLabel="Revisión" value={quote.number.revision} onChange={(v) => setRevision(Math.max(0, Math.round(v)))} />
-        </label>
-      )}
+      ) : null}
       {error ? <small className="warning">{error}</small> : null}
     </div>
   )

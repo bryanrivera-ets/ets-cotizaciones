@@ -92,6 +92,8 @@ export interface QuoteHeader {
   /** Fecha ISO "2026-06-01" */
   date: string
   contact: string
+  /** Email del contacto (para enviar la cotización; no sale en el PDF) */
+  contactEmail?: string
   contractor: string
   projectArea: string
   location: string

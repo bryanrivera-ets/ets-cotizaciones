@@ -130,6 +130,37 @@ describe('usuario autorizado', () => {
   })
 })
 
+describe('revisiones: la versión anterior queda bloqueada', () => {
+  beforeEach(async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore()
+      await setDoc(doc(db, 'quotes', 'v0'), { ...quote('v0'), locked: true, supersededBy: 'v1' })
+      await setDoc(doc(db, 'quotes', 'v1'), { ...quote('v1'), revisionOf: 'v0' })
+    })
+  })
+
+  it('no se puede editar el contenido ni el número de una versión bloqueada', async () => {
+    const db = as(ALLOWED)
+    await assertFails(updateDoc(doc(db, 'quotes', 'v0'), { body: { id: 'v0', type: 'tm' }, updatedBy: ALLOWED }))
+    await assertFails(updateDoc(doc(db, 'quotes', 'v0'), { number: { seq: 9, year: 2026, revision: 0 }, updatedBy: ALLOWED }))
+  })
+
+  it('no se puede borrar una versión bloqueada', async () => {
+    await assertFails(deleteDoc(doc(as(ALLOWED), 'quotes', 'v0')))
+  })
+
+  it('sí se puede quitar el bloqueo (al borrar la revisión más nueva)', async () => {
+    const db = as(ALLOWED)
+    await assertSucceeds(deleteDoc(doc(db, 'quotes', 'v1')))
+    await assertSucceeds(updateDoc(doc(db, 'quotes', 'v0'), { locked: false, updatedBy: ALLOWED }))
+    await assertSucceeds(updateDoc(doc(db, 'quotes', 'v0'), { body: { id: 'v0', type: 'tm' }, updatedBy: ALLOWED }))
+  })
+
+  it('no se puede crear una cotización ya bloqueada', async () => {
+    await assertFails(setDoc(doc(as(ALLOWED), 'quotes', 'v9'), { ...quote('v9'), locked: true }))
+  })
+})
+
 describe('numeración con transacciones', () => {
   it('dos usuarios reservando al mismo tiempo nunca reciben el mismo número', async () => {
     await env.withSecurityRulesDisabled(async (ctx) => {

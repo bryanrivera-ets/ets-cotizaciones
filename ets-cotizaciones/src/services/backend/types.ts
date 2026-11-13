@@ -14,6 +14,12 @@ export interface StoredQuote {
   createdBy?: string
   /** Hay cambios en este dispositivo que todavía no llegan a la nube */
   pending?: boolean
+  /** Versión anterior reemplazada por una revisión: solo lectura */
+  locked?: boolean
+  /** Id de la revisión que la reemplazó */
+  supersededBy?: string
+  /** Id de la versión anterior (si esta es una revisión) */
+  revisionOf?: string
 }
 
 export type Unsubscribe = () => void
@@ -48,6 +54,12 @@ export interface Backend {
     saveBody(quote: Quote): Promise<void>
     /** Cambia el número (revisiones). */
     setNumber(id: string, number: QuoteNumber): Promise<void>
+    /**
+     * Crea la revisión `rev` de la cotización `prevId` y bloquea la anterior (transacción:
+     * si dos personas lo intentan a la vez, solo una lo logra). Necesita conexión en la nube.
+     */
+    createRevision(prevId: string, rev: Quote): Promise<void>
+    /** Elimina; si era una revisión, la versión anterior vuelve a ser editable. */
     remove(id: string): Promise<void>
   }
 
