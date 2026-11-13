@@ -37,6 +37,11 @@ export default defineConfig({
         // Rutas internas de Firebase (inicio de sesión) nunca salen de la caché
         navigateFallbackDenylist: [/^\/__\//],
         cleanupOutdatedCaches: true,
+        // Sin comprimir el service worker (modo "development" de Workbox, sin mensajes de depuración):
+        // ese paso usaba mucha memoria y fallaba en algunas computadoras con
+        // "JavaScript heap out of memory". El archivo es pequeño igual.
+        mode: 'development',
+        disableDevLogs: true,
       },
       devOptions: { enabled: false },
     }),
