@@ -13,7 +13,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 | 3 | Generación de PDF de los 4 tipos ([resultados](./docs/fase3/README.md)) | ✅ |
 | 4 | Formularios con vista previa y guardado local | ✅ |
 | 5 | Biblioteca de sistemas, catálogo T&M, términos y perfiles (Configuración) | ✅ |
-| 6 | Firebase: login, sincronización, numeración, reglas | pendiente |
+| 6 | Firebase: login, sincronización offline, numeración, reglas ([configurar](./docs/FIREBASE-CONFIGURACION.md)) | ✅ (falta conectar tu proyecto) |
 | 7 | Historial, estados, duplicar, revisiones, email | pendiente |
 | 8 | PWA, offline completo y publicación | pendiente |
 
@@ -33,9 +33,19 @@ npm run typecheck    # verificación de tipos TypeScript
 npm run lint         # revisión de código (oxlint)
 npm run build        # compila la versión de producción en dist/
 npm run preview      # sirve la versión de producción localmente
+npm run test:rules   # prueba las reglas de seguridad de Firestore (inicia el emulador; requiere Java)
+npm run emulators    # emuladores de Firebase (auth + firestore) para desarrollo
+npm run dev:emu      # la app conectada a los emuladores (en otra ventana)
 npm run pdf:examples # genera los PDF de los 6 ejemplos en out/pdf/
 npm run pdf:compare  # compara out/pdf/ con referencia/ejemplos/ (Python 3 + pymupdf + Pillow)
 ```
+
+## Firebase
+
+- Sin archivo `.env`, la app funciona en **modo local** (todo se guarda solo en ese navegador).
+- Con `.env` (ver `.env.example`), usa Firebase: inicio de sesión, datos compartidos, offline y numeración.
+- Pasos en la consola: [`docs/FIREBASE-CONFIGURACION.md`](./docs/FIREBASE-CONFIGURACION.md).
+- Reglas de seguridad: [`firestore.rules`](./firestore.rules), probadas en `tests/rules/`.
 
 ## Estructura
 

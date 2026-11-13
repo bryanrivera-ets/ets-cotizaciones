@@ -5,6 +5,8 @@ import type { ProposalTitle, Quote, QuoteStatus, RichLine, ScopeItem, ScopeLevel
 import { SCOPE_BULLETS } from '../../../domain/types.ts'
 import { Button, Card, Field, NumberInput, RowActions, Select, TextInput } from '../../../ui/controls.tsx'
 import { move } from '../../../ui/list.ts'
+import { useState } from 'react'
+import { backend } from '../../../services/backend/index.ts'
 import { useLibrary } from '../../library/context.ts'
 import type { Update } from '../editorTypes.ts'
 import { STATUS_LABEL } from '../labels.ts'
@@ -22,21 +24,8 @@ export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) 
         <Field label="Fecha">
           {(id) => <input id={id} type="date" value={h.date} onChange={(e) => e.target.value && setH('date')(e.target.value)} />}
         </Field>
-        <Field label="Quote No. (secuencia – año – revisión)" span2 hint="Temporal: en la Fase 6 se asigna automáticamente">
-          {() => (
-            <div className="quote-no">
-              <NumberInput
-                ariaLabel="Secuencia"
-                value={quote.number.seq ?? 0}
-                onChange={(v) => update((d) => void (d.number.seq = v > 0 ? Math.round(v) : null))}
-              />
-              <span>-</span>
-              <NumberInput ariaLabel="Año" value={quote.number.year} onChange={(v) => update((d) => void (d.number.year = Math.round(v) || d.number.year))} />
-              <span>REV</span>
-              <NumberInput ariaLabel="Revisión" value={quote.number.revision} onChange={(v) => update((d) => void (d.number.revision = Math.max(0, Math.round(v))))} />
-              <output className="muted">{formatQuoteNumber(quote.number, quote.type === 'tm')}</output>
-            </div>
-          )}
+        <Field label="Quote No." span2>
+          {() => <QuoteNumberField quote={quote} update={update} />}
         </Field>
         <Field label="Contact">{(id) => <TextInput id={id} value={h.contact} onChange={setH('contact')} placeholder="Eng. …" />}</Field>
         <Field label="Contractor">{(id) => <TextInput id={id} value={h.contractor} onChange={setH('contractor')} />}</Field>
@@ -292,6 +281,56 @@ export function SystemPicker({
       >
         Guardar en biblioteca
       </Button>
+    </div>
+  )
+}
+
+// ───────────────────────── Número oficial ─────────────────────────
+
+/**
+ * Muestra el número. Si todavía no tiene, se asigna solo al haber conexión;
+ * "Reservar número" lo pide en ese momento (necesita internet).
+ */
+function QuoteNumberField({ quote, update }: { quote: Quote; update: Update }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const reserve = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await backend.numbering.reserve(quote.id, Number(quote.header.date.slice(0, 4)))
+    } catch (e) {
+      setError(
+        navigator.onLine
+          ? `No se pudo reservar: ${(e as Error).message}`
+          : 'Sin conexión: el número se asignará solo cuando vuelva el internet.',
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+  const setRevision = (revision: number) => {
+    const number = { ...quote.number, revision }
+    update((d) => void (d.number = number))
+    void backend.quotes.setNumber(quote.id, number)
+  }
+  return (
+    <div className="quote-no">
+      <output className="quote-no__value">{formatQuoteNumber(quote.number, quote.type === 'tm')}</output>
+      {quote.number.seq === null ? (
+        <>
+          <Button onClick={reserve} disabled={busy}>
+            {busy ? 'Reservando…' : 'Reservar número'}
+          </Button>
+          <small className="hint">Sin número todavía: se asigna solo al haber conexión.</small>
+        </>
+      ) : (
+        <label className="quote-no__rev">
+          REV
+          <NumberInput ariaLabel="Revisión" value={quote.number.revision} onChange={(v) => setRevision(Math.max(0, Math.round(v)))} />
+        </label>
+      )}
+      {error ? <small className="warning">{error}</small> : null}
     </div>
   )
 }

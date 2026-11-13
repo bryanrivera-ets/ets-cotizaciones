@@ -4,7 +4,7 @@ import { QUOTE_TYPE_LABEL } from '../../domain/factories.ts'
 import { pdfFileNameOf, quoteNumberOf } from '../../domain/format.ts'
 import type { LumpSumQuote, PremiumTimeQuote, Quote, TmQuote } from '../../domain/types.ts'
 import { generatePdfBlob } from '../../pdf/browser.ts'
-import { localQuoteStore } from '../../services/localStore.ts'
+import { backend } from '../../services/backend/index.ts'
 import { Button } from '../../ui/controls.tsx'
 import type { Update } from './editorTypes.ts'
 import { HeaderForm } from './forms/common.tsx'
@@ -23,14 +23,18 @@ export function QuoteEditorPage({ id, navigate }: { id: string; navigate: (path:
   const [tab, setTab] = useState<'form' | 'preview'>('form')
   const dirty = useRef(false)
 
-  // Cargar
-  useEffect(() => {
-    let alive = true
-    localQuoteStore.get(id).then((s) => alive && setQuote(s?.quote ?? null))
-    return () => {
-      alive = false
-    }
-  }, [id])
+  // Cargar y seguir en vivo el número oficial (se asigna aparte, incluso mientras se edita)
+  useEffect(
+    () =>
+      backend.quotes.watch(id, (stored) => {
+        setQuote((cur) => {
+          if (!stored) return cur === undefined ? null : cur
+          if (!cur) return stored.quote
+          return JSON.stringify(cur.number) === JSON.stringify(stored.quote.number) ? cur : { ...cur, number: stored.quote.number }
+        })
+      }),
+    [id],
+  )
 
   const update: Update = useCallback((recipe) => {
     dirty.current = true
@@ -42,8 +46,8 @@ export function QuoteEditorPage({ id, navigate }: { id: string; navigate: (path:
   useEffect(() => {
     if (!quote || !dirty.current) return
     const t = setTimeout(() => {
-      localQuoteStore
-        .save(quote)
+      backend.quotes
+        .saveBody(quote)
         .then(() => {
           dirty.current = false
           setSaveState('saved')
