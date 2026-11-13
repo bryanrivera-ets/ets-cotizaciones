@@ -2,7 +2,7 @@ import { Link, Path, Rect, Svg, Text, View } from '@react-pdf/renderer'
 import type { Style } from '@react-pdf/stylesheet'
 import { brand } from '../domain/brand.ts'
 import type { ScopeItem, TermsLine } from '../domain/types.ts'
-import { signatureFontOf } from './fonts.ts'
+import { signatureFontOf } from './signatureFonts.ts'
 
 /** Recursos que dependen del entorno (URL en navegador, ruta en Node). */
 export interface PdfAssets {

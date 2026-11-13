@@ -1,18 +1,19 @@
 import { newScopeItem } from '../../../domain/factories.ts'
 import { defaultPdfFileName, formatQuoteNumber } from '../../../domain/format.ts'
-import { SEED_PROFILES } from '../../../domain/seed/profiles.ts'
-import { SEED_SIGNERS } from '../../../domain/seed/signers.ts'
-import { SEED_TERMS } from '../../../domain/seed/terms.ts'
+import { systemFromSection } from '../../../domain/library.ts'
 import type { ProposalTitle, Quote, QuoteStatus, RichLine, ScopeItem, ScopeLevel } from '../../../domain/types.ts'
 import { SCOPE_BULLETS } from '../../../domain/types.ts'
 import { Button, Card, Field, NumberInput, RowActions, Select, TextInput } from '../../../ui/controls.tsx'
 import { move } from '../../../ui/list.ts'
+import { useLibrary } from '../../library/context.ts'
 import type { Update } from '../editorTypes.ts'
 import { STATUS_LABEL } from '../labels.ts'
 
 // ───────────────────────── Datos generales ─────────────────────────
 
 export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) {
+  const { library } = useLibrary()
+  const { profiles: SEED_PROFILES, signers: SEED_SIGNERS, terms: SEED_TERMS } = library
   const h = quote.header
   const setH = (k: keyof Quote['header']) => (v: string) => update((d) => void (d.header[k] = v))
   return (
@@ -89,7 +90,10 @@ export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) 
                   if (s) d.signer = structuredClone(s)
                 })
               }
-              options={SEED_SIGNERS.map((s) => ({ value: s.id, label: `${s.name} – ${s.position}` }))}
+              options={[
+                ...(SEED_SIGNERS.some((s) => s.id === quote.signer.id) ? [] : [{ value: quote.signer.id, label: `${quote.signer.name} (copia guardada)` }]),
+                ...SEED_SIGNERS.map((s) => ({ value: s.id, label: `${s.name} – ${s.position}` })),
+              ]}
             />
           )}
         </Field>
@@ -104,7 +108,10 @@ export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) 
                   if (t) d.terms = structuredClone(t)
                 })
               }
-              options={SEED_TERMS.map((t) => ({ value: t.id, label: t.name }))}
+              options={[
+                ...(SEED_TERMS.some((t) => t.id === quote.terms.id) ? [] : [{ value: quote.terms.id, label: `${quote.terms.name} (copia guardada)` }]),
+                ...SEED_TERMS.map((t) => ({ value: t.id, label: t.name })),
+              ]}
             />
           )}
         </Field>
@@ -236,6 +243,54 @@ export function RichLinesEditor({
       ))}
       <Button variant="ghost" onClick={() => update((ls) => void ls.push({ text: '' }))}>
         + Línea
+      </Button>
+    </div>
+  )
+}
+
+// ───────────────────────── Sistema de la biblioteca ─────────────────────────
+
+/** Escoge un sistema (llena To Be Performed + Scope) o guarda lo escrito como sistema nuevo. */
+export function SystemPicker({
+  target,
+  onApply,
+}: {
+  target: { toBePerformed: string; scope: ScopeItem[]; systemId?: string }
+  onApply: (systemId: string) => void
+}) {
+  const { library, update } = useLibrary()
+  const current = library.systems.find((s) => s.id === target.systemId)
+  return (
+    <div className="system-picker">
+      <select
+        aria-label="Sistema de la biblioteca"
+        value=""
+        onChange={(e) => {
+          const id = e.target.value
+          if (!id) return
+          const hasText = target.scope.some((s) => s.text.trim())
+          if (hasText && !confirm('¿Reemplazar el To Be Performed y el Scope por los del sistema escogido?')) return
+          onApply(id)
+        }}
+      >
+        <option value="">{current ? `Sistema: ${current.name} — cambiar…` : 'Cargar sistema de la biblioteca…'}</option>
+        {library.systems.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+      </select>
+      <Button
+        variant="ghost"
+        title="Guarda el To Be Performed y el Scope de esta sección como un sistema nuevo"
+        onClick={() => {
+          const name = prompt('Nombre del sistema nuevo para la biblioteca:', current ? `${current.name} (variante)` : '')
+          if (!name?.trim()) return
+          update('systems', (d) => void d.push(systemFromSection(name.trim(), target)))
+          alert(`Se guardó "${name.trim()}" en la biblioteca de sistemas.`)
+        }}
+      >
+        Guardar en biblioteca
       </Button>
     </div>
   )

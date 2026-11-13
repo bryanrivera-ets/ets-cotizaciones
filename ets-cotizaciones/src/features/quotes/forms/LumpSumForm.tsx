@@ -5,10 +5,13 @@ import type { LumpSumQuote, PriceGroup } from '../../../domain/types.ts'
 import { Button, Card, Computed, Field, MoneyInput, RowActions, TextArea, TextInput } from '../../../ui/controls.tsx'
 import { move } from '../../../ui/list.ts'
 import type { Update } from '../editorTypes.ts'
-import { RichLinesEditor, ScopeEditor } from './common.tsx'
+import { applySystem } from '../../../domain/library.ts'
+import { useLibrary } from '../../library/context.ts'
+import { RichLinesEditor, ScopeEditor, SystemPicker } from './common.tsx'
 
 export function LumpSumForm({ quote, update }: { quote: LumpSumQuote; update: Update<LumpSumQuote> }) {
   const result = computeLumpSum(quote)
+  const { library } = useLibrary()
   return (
     <>
       <Card title="Separación Material / Labor">
@@ -50,6 +53,13 @@ export function LumpSumForm({ quote, update }: { quote: LumpSumQuote; update: Up
               />
             }
           >
+            <SystemPicker
+              target={section}
+              onApply={(sid) => {
+                const sys = library.systems.find((x) => x.id === sid)
+                if (sys) upSection((s) => applySystem(s, sys))
+              }}
+            />
             <Field label="TO BE PERFORMED" wide>
               {(id) => <TextArea id={id} value={section.toBePerformed} onChange={(v) => upSection((s) => void (s.toBePerformed = v))} />}
             </Field>
