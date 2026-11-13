@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { EXAMPLES } from './fixtures/examples.ts'
 import { formatMoney, parseMoney } from './money.ts'
 import {

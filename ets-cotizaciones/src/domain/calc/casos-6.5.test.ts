@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 /**
  * Casos de prueba obligatorios de la sección 6.5 de ESPECIFICACION.md.
  * Cada caso usa los datos reales de referencia/ejemplos/ (src/domain/fixtures/examples.ts).

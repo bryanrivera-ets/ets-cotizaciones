@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { dollars as $ } from '../money.ts'
 import type { TmArea } from '../types.ts'
 import { allocateAreas, areaQtyLabel, computeLabor, materialAmount } from './tm.ts'
