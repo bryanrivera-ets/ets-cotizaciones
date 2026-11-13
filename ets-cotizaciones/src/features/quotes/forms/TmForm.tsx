@@ -5,7 +5,9 @@ import type { AreaAllocation, HoursSource, TmQuote } from '../../../domain/types
 import { Button, Card, Computed, Field, MoneyInput, NumberInput, RowActions, Select, TextArea, TextInput } from '../../../ui/controls.tsx'
 import { move } from '../../../ui/list.ts'
 import type { Update } from '../editorTypes.ts'
-import { ScopeEditor } from './common.tsx'
+import { applySystem, findMaterial, findPosition } from '../../../domain/library.ts'
+import { useLibrary } from '../../library/context.ts'
+import { ScopeEditor, SystemPicker } from './common.tsx'
 
 const HOURS_SOURCE: { value: HoursSource; label: string }[] = [
   { value: 'supervisor', label: 'Calendario: Supervisor' },
@@ -18,9 +20,27 @@ const fmt = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 2 
 
 export function TmForm({ quote, update }: { quote: TmQuote; update: Update<TmQuote> }) {
   const r = computeTm(quote)
+  const { library } = useLibrary()
   return (
     <>
       <Card title="Trabajo">
+        <SystemPicker
+          target={quote}
+          onApply={(sid) => {
+            const sys = library.systems.find((x) => x.id === sid)
+            if (sys) update((d) => applySystem(d, sys))
+          }}
+        />
+        <datalist id="catalog-positions">
+          {library.positions.map((p) => (
+            <option key={p.id} value={p.name} />
+          ))}
+        </datalist>
+        <datalist id="catalog-materials">
+          {library.materials.map((m) => (
+            <option key={m.id} value={m.name} />
+          ))}
+        </datalist>
         <Field label="TO BE PERFORMED" wide>
           {(id) => <TextArea id={id} value={quote.toBePerformed} onChange={(v) => update((d) => void (d.toBePerformed = v))} />}
         </Field>
@@ -91,7 +111,19 @@ export function TmForm({ quote, update }: { quote: TmQuote; update: Update<TmQuo
           </div>
           {quote.labor.map((p, i) => (
             <div key={p.id} className="tbl__row">
-              <TextInput ariaLabel="Posición" value={p.name} onChange={(v) => update((d) => void (d.labor[i].name = v))} />
+              <input
+                aria-label="Posición"
+                list="catalog-positions"
+                value={p.name}
+                onChange={(e) => {
+                  const v = e.target.value
+                  const cat = findPosition(library.positions, v)
+                  update((d) => {
+                    d.labor[i].name = v
+                    if (cat) d.labor[i].hoursSource = cat.hoursSource
+                  })
+                }}
+              />
               <NumberInput ariaLabel="Cantidad de personas" suffix="pers." value={p.qty} onChange={(v) => update((d) => void (d.labor[i].qty = v))} />
               <div className="hours-src">
                 <Select<HoursSource> ariaLabel="Origen de las horas" value={p.hoursSource} options={HOURS_SOURCE} onChange={(v) => update((d) => void (d.labor[i].hoursSource = v))} />
@@ -135,7 +167,19 @@ export function TmForm({ quote, update }: { quote: TmQuote; update: Update<TmQuo
           </div>
           {quote.materials.map((m, i) => (
             <div key={m.id} className="tbl__row">
-              <TextInput ariaLabel="Descripción" value={m.description} onChange={(v) => update((d) => void (d.materials[i].description = v))} />
+              <input
+                aria-label="Descripción"
+                list="catalog-materials"
+                value={m.description}
+                onChange={(e) => {
+                  const v = e.target.value
+                  const cat = findMaterial(library.materials, v)
+                  update((d) => {
+                    d.materials[i].description = v
+                    if (cat) d.materials[i].unit = cat.unit
+                  })
+                }}
+              />
               <input
                 aria-label="Cantidad"
                 inputMode="decimal"

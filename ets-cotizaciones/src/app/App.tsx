@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { LibraryProvider } from '../features/library/LibraryProvider.tsx'
 import { QuoteListPage } from '../features/quotes/QuoteListPage.tsx'
+import { SettingsPage } from '../features/settings/SettingsPage.tsx'
 
 // El editor incluye el generador de PDF (pesado): se carga solo al abrir una cotización
 const QuoteEditorPage = lazy(() => import('../features/quotes/QuoteEditorPage.tsx').then((m) => ({ default: m.QuoteEditorPage })))
@@ -23,6 +25,7 @@ function useHashPath(): [string, (p: string) => void] {
 export default function App() {
   const [path, navigate] = useHashPath()
   const edit = /^\/cotizacion\/([\w-]+)$/.exec(path)
+  const settings = /^\/configuracion(?:\/([\w-]+))?$/.exec(path)
 
   return (
     <div className="app">
@@ -31,15 +34,27 @@ export default function App() {
           <img src={`${import.meta.env.BASE_URL}logo-ets.png`} alt="" />
           <span>Cotizaciones</span>
         </a>
+        <nav className="nav">
+          <a href="#/" aria-current={!settings ? 'page' : undefined}>
+            Cotizaciones
+          </a>
+          <a href="#/configuracion" aria-current={settings ? 'page' : undefined}>
+            Configuración
+          </a>
+        </nav>
       </header>
       <main>
-        {edit ? (
+        <LibraryProvider>
+        {settings ? (
+          <SettingsPage tab={settings[1] ?? 'sistemas'} navigate={navigate} />
+        ) : edit ? (
           <Suspense fallback={<p className="page muted">Abriendo…</p>}>
             <QuoteEditorPage key={edit[1]} id={edit[1]} navigate={navigate} />
           </Suspense>
         ) : (
           <QuoteListPage navigate={navigate} />
         )}
+        </LibraryProvider>
       </main>
     </div>
   )

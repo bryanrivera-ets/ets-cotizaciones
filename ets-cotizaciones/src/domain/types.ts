@@ -236,6 +236,8 @@ export interface TmArea {
 
 export interface TmQuote extends QuoteBase {
   type: 'tm'
+  /** Sistema de la biblioteca usado para el scope (solo referencia) */
+  systemId?: string
   toBePerformed: string
   scope: ScopeItem[]
   labor: LaborPosition[]

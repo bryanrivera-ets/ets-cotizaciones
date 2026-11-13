@@ -6,12 +6,10 @@ import { newId, newQuote, QUOTE_TYPE_LABEL } from '../../domain/factories.ts'
 import { EXAMPLES } from '../../domain/fixtures/examples.ts'
 import { formatLongDate, quoteNumberOf } from '../../domain/format.ts'
 import { formatMoney } from '../../domain/money.ts'
-import { SEED_PROFILES } from '../../domain/seed/profiles.ts'
-import { SEED_SIGNERS } from '../../domain/seed/signers.ts'
-import { SEED_TERMS } from '../../domain/seed/terms.ts'
 import type { Quote, QuoteType } from '../../domain/types.ts'
 import { getCurrentProfileId, localQuoteStore, setCurrentProfileId, type StoredQuote } from '../../services/localStore.ts'
 import { Button, Select } from '../../ui/controls.tsx'
+import { useLibrary } from '../library/context.ts'
 import { STATUS_LABEL } from './labels.ts'
 
 function totalOf(q: Quote): number {
@@ -22,7 +20,12 @@ function totalOf(q: Quote): number {
 
 export function QuoteListPage({ navigate }: { navigate: (path: string) => void }) {
   const [items, setItems] = useState<StoredQuote[] | null>(null)
-  const [profileId, setProfileId] = useState(getCurrentProfileId() ?? SEED_PROFILES[0].id)
+  const { library } = useLibrary()
+  const { profiles: SEED_PROFILES, signers: SEED_SIGNERS, terms: SEED_TERMS } = library
+  const [profileId, setProfileId] = useState(() => {
+    const saved = getCurrentProfileId()
+    return SEED_PROFILES.some((p) => p.id === saved) ? (saved as string) : SEED_PROFILES[0].id
+  })
 
   const reload = () => localQuoteStore.list().then(setItems)
   useEffect(() => {

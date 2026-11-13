@@ -12,7 +12,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 | 2 | Modelos de datos y cálculos (Vitest) | ✅ |
 | 3 | Generación de PDF de los 4 tipos ([resultados](./docs/fase3/README.md)) | ✅ |
 | 4 | Formularios con vista previa y guardado local | ✅ |
-| 5 | Biblioteca de sistemas, términos y perfiles | pendiente |
+| 5 | Biblioteca de sistemas, catálogo T&M, términos y perfiles (Configuración) | ✅ |
 | 6 | Firebase: login, sincronización, numeración, reglas | pendiente |
 | 7 | Historial, estados, duplicar, revisiones, email | pendiente |
 | 8 | PWA, offline completo y publicación | pendiente |
