@@ -12,7 +12,7 @@
  * del formulario nunca pueda borrar un número asignado.
  */
 import { deleteApp, initializeApp } from 'firebase/app'
-import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth'
+import { connectAuthEmulator, createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth'
 import {
   addDoc,
   collection,
@@ -34,7 +34,7 @@ import {
 } from 'firebase/firestore'
 import { withDefaults, type Library } from '../../domain/library.ts'
 import type { Quote, QuoteNumber } from '../../domain/types.ts'
-import { firebaseConfig } from '../firebase/config.ts'
+import { firebaseConfig, useEmulators } from '../firebase/config.ts'
 import { getFirebase } from '../firebase/app.ts'
 import type { AllowedUser, Backend, ChangeLogEntry, StoredQuote } from './types.ts'
 
@@ -210,8 +210,6 @@ export const firebaseBackend: Backend = {
         const secondary = initializeApp(firebaseConfig!, `crear-usuario-${Date.now()}`)
         try {
           const auth2 = getAuth(secondary)
-          const { connectAuthEmulator } = await import('firebase/auth')
-          const { useEmulators } = await import('../firebase/config.ts')
           if (useEmulators) connectAuthEmulator(auth2, 'http://127.0.0.1:9099', { disableWarnings: true })
           await createUserWithEmailAndPassword(auth2, email, password).catch((e) => {
             if ((e as { code?: string }).code !== 'auth/email-already-in-use') throw e
