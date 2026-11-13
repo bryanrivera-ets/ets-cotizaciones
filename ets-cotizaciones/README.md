@@ -10,7 +10,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 |---|---|---|
 | 1 | Base del proyecto, estructura, README, resumen de referencias | ✅ |
 | 2 | Modelos de datos y cálculos (Vitest) | ✅ |
-| 3 | Generación de PDF de los 4 tipos | pendiente |
+| 3 | Generación de PDF de los 4 tipos ([resultados](./docs/fase3/README.md)) | ✅ |
 | 4 | Formularios con vista previa y guardado local | pendiente |
 | 5 | Biblioteca de sistemas, términos y perfiles | pendiente |
 | 6 | Firebase: login, sincronización, numeración, reglas | pendiente |
@@ -33,6 +33,8 @@ npm run typecheck    # verificación de tipos TypeScript
 npm run lint         # revisión de código (oxlint)
 npm run build        # compila la versión de producción en dist/
 npm run preview      # sirve la versión de producción localmente
+npm run pdf:examples # genera los PDF de los 6 ejemplos en out/pdf/
+npm run pdf:compare  # compara out/pdf/ con referencia/ejemplos/ (Python 3 + pymupdf + Pillow)
 ```
 
 ## Estructura
@@ -44,7 +46,8 @@ ets-cotizaciones/
 ├── referencia/ejemplos/     PDF reales usados como modelo
 ├── docs/                    documentación (resumen de referencias, guías)
 ├── public/                  archivos estáticos (logo, fuentes, iconos PWA)
-│   └── fonts/               fuentes incluidas en la app (Fase 3)
+│   └── fonts/               fuentes libres incluidas en la app (ver LICENCIAS.md)
+├── scripts/                 generar y comparar los PDF de ejemplo
 └── src/
     ├── app/                 App principal, navegación y layout
     ├── domain/              modelos de datos y cálculos puros (dinero en centavos) + pruebas

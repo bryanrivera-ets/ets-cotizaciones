@@ -10,9 +10,12 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "pdf:examples": "tsx --tsconfig tsconfig.scripts.json scripts/render-examples.tsx",
+    "pdf:compare": "python3 scripts/compare-examples.py"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
@@ -22,6 +25,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.90.0",
+    "tsx": "^4.23.15",
     "typescript": "~7.0.2",
     "vite": "^8.3.6",
     "vitest": "^5.1.0"

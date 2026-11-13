@@ -20,8 +20,8 @@ const scope = (items: [ScopeLevel, string][]): ScopeItem[] =>
   items.map(([level, text]) => ({ id: id('sc'), level, text }))
 const L = (text: string, extra: Partial<RichLine> = {}): RichLine => ({ text, ...extra })
 
-const DMR = { name: 'DMR', initials: 'DMR' }
-const CSN = { name: 'CSN', initials: 'CSN' }
+const DMR = { name: 'Domardi Machin', initials: 'DMR' }
+const CSN = { name: 'Carlos Soto Navarro', initials: 'CSN' }
 const SIX_HIGH = '(6” high)'
 
 // ───────────────────────── 049-26 REV I ─────────────────────────
