@@ -25,3 +25,6 @@ dist-ssr
 
 # PDF generados para comparar
 out
+
+# Registros de los emuladores de Firebase
+*-debug.log

@@ -1,0 +1,68 @@
+rules_version = '2';
+
+// Reglas de seguridad de ETS Cotizaciones.
+// Solo usuarios con sesión iniciada Y cuyo email esté en /allowedUsers pueden leer o escribir.
+// Todo lo que no se permite explícitamente está prohibido.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email is string;
+    }
+
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isAllowed() {
+      return signedIn() && exists(/databases/$(database)/documents/allowedUsers/$(myEmail()));
+    }
+
+    // Lista de usuarios autorizados (el id del documento es el email en minúsculas)
+    match /allowedUsers/{email} {
+      // Cada persona puede ver si ella misma está autorizada (para la pantalla de entrada)
+      allow read: if isAllowed() || (signedIn() && myEmail() == email);
+      allow create, update: if isAllowed()
+        && request.resource.data.email == email
+        && email == email.lower();
+      // Nadie puede quitarse a sí mismo (evita quedarse sin administradores por error)
+      allow delete: if isAllowed() && myEmail() != email;
+    }
+
+    // Cotizaciones: { body, number, createdAt, createdBy, updatedAt, updatedBy }
+    match /quotes/{quoteId} {
+      allow read: if isAllowed();
+      allow create: if isAllowed()
+        && request.resource.data.keys().hasAll(['body', 'number'])
+        && request.resource.data.body.id == quoteId
+        && request.resource.data.updatedBy == myEmail();
+      allow update: if isAllowed()
+        && request.resource.data.body.id == quoteId
+        && request.resource.data.updatedBy == myEmail();
+      allow delete: if isAllowed();
+    }
+
+    // Biblioteca: systems, materials, positions, terms, profiles, signers
+    match /library/{key} {
+      allow read: if isAllowed();
+      allow write: if isAllowed()
+        && key in ['systems', 'materials', 'positions', 'terms', 'profiles', 'signers']
+        && request.resource.data.items is list;
+    }
+
+    // Contador de numeración por año: { next }
+    match /counters/{year} {
+      allow read: if isAllowed();
+      allow write: if isAllowed()
+        && request.resource.data.next is int
+        && request.resource.data.next >= 1;
+    }
+
+    // Registro de cambios: solo se agrega, nunca se modifica ni se borra
+    match /changelog/{entryId} {
+      allow read: if isAllowed();
+      allow create: if isAllowed() && request.resource.data.by == myEmail();
+      allow update, delete: if false;
+    }
+  }
+}
