@@ -1,0 +1,63 @@
+# Compila, prueba y publica la app en Firebase Hosting (https://ets-cotizaciones.web.app).
+# - En cada pull request: solo revisa (tipos, pruebas y compilación).
+# - Al fusionar en main (o al pulsar "Run workflow"): revisa y, si todo pasa, publica la app y
+#   las reglas de seguridad de Firestore.
+# Necesita el secreto FIREBASE_SERVICE_ACCOUNT (ver ets-cotizaciones/docs/PUBLICAR.md).
+name: Publicar
+
+on:
+  push:
+    branches: [main]
+    paths: ['ets-cotizaciones/**', '.github/workflows/publicar.yml']
+  pull_request:
+    paths: ['ets-cotizaciones/**', '.github/workflows/publicar.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: publicar-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ets-cotizaciones
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ets-cotizaciones/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Revisar tipos
+        run: npm run typecheck
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Compilar
+        run: npx vite build
+
+      - name: Publicar en Firebase (app + reglas)
+        if: github.event_name != 'pull_request'
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::error::Falta el secreto FIREBASE_SERVICE_ACCOUNT (ver docs/PUBLICAR.md)."
+            exit 1
+          fi
+          printf '%s' "$SA" > "$RUNNER_TEMP/firebase-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json"
+          npx firebase deploy --only hosting,firestore:rules --project ets-cotizaciones --non-interactive --force
+          rm -f "$RUNNER_TEMP/firebase-sa.json"
