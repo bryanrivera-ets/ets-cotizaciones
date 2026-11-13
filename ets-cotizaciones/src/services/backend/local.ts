@@ -34,10 +34,14 @@ async function listQuotes(): Promise<StoredQuote[]> {
   return all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
-async function putQuote(quote: Quote): Promise<void> {
-  await set(quote.id, { quote, updatedAt: new Date().toISOString(), updatedBy: 'local' } satisfies StoredQuote, quotesDb)
+async function putQuote(quote: Quote, extra: Partial<StoredQuote> = {}): Promise<void> {
+  const cur = await get<StoredQuote>(quote.id, quotesDb)
+  const meta = { locked: cur?.locked, supersededBy: cur?.supersededBy, revisionOf: cur?.revisionOf, ...extra }
+  await set(quote.id, { quote, updatedAt: new Date().toISOString(), updatedBy: 'local', ...meta } satisfies StoredQuote, quotesDb)
   quotesChanged.emit()
 }
+
+const LOCKED_MSG = 'Esta versión fue reemplazada por una revisión y no se puede modificar.'
 
 async function loadLibrary(): Promise<Library> {
   const partial: Partial<Library> = {}
@@ -64,18 +68,33 @@ export const localBackend: Backend = {
       void load()
       return quotesChanged.on(load)
     },
-    create: putQuote,
+    create: (quote) => putQuote(quote),
     async saveBody(quote) {
       // Igual que en la nube: el número guardado manda sobre el del formulario.
       const cur = await get<StoredQuote>(quote.id, quotesDb)
+      if (cur?.locked) throw new Error(LOCKED_MSG)
       await putQuote(cur ? { ...quote, number: cur.quote.number } : quote)
     },
     async setNumber(id, number) {
       const cur = await get<StoredQuote>(id, quotesDb)
+      if (cur?.locked) throw new Error(LOCKED_MSG)
       if (cur) await putQuote({ ...cur.quote, number })
     },
+    async createRevision(prevId, rev) {
+      const prev = await get<StoredQuote>(prevId, quotesDb)
+      if (!prev) throw new Error('La cotización no existe')
+      if (prev.locked) throw new Error('Ya existe una revisión más nueva de esta cotización.')
+      await putQuote(rev, { revisionOf: prevId, locked: false })
+      await putQuote(prev.quote, { locked: true, supersededBy: rev.id })
+    },
     async remove(id) {
+      const cur = await get<StoredQuote>(id, quotesDb)
+      if (cur?.locked) throw new Error('No se puede eliminar una versión anterior; elimina primero la revisión más nueva.')
       await del(id, quotesDb)
+      if (cur?.revisionOf) {
+        const prev = await get<StoredQuote>(cur.revisionOf, quotesDb)
+        if (prev) await putQuote(prev.quote, { locked: false, supersededBy: undefined })
+      }
       quotesChanged.emit()
     },
   },

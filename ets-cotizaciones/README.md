@@ -14,7 +14,7 @@ archivos de referencia en [`docs/RESUMEN-REFERENCIA.md`](./docs/RESUMEN-REFERENC
 | 4 | Formularios con vista previa y guardado local | ✅ |
 | 5 | Biblioteca de sistemas, catálogo T&M, términos y perfiles (Configuración) | ✅ |
 | 6 | Firebase: login, sincronización offline, numeración, reglas ([configurar](./docs/FIREBASE-CONFIGURACION.md)) | ✅ (falta conectar tu proyecto) |
-| 7 | Historial, estados, duplicar, revisiones, email | pendiente |
+| 7 | Historial con búsqueda, estados, duplicar, revisiones, registro de cambios, enviar por email | ✅ |
 | 8 | PWA, offline completo y publicación | pendiente |
 
 ## Requisitos
