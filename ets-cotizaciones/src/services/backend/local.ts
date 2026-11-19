@@ -109,6 +109,17 @@ export const localBackend: Backend = {
       await putQuote({ ...cur.quote, number: { ...cur.quote.number, seq: next, year } })
       return next
     },
+    async setManual(quoteId, seq, year) {
+      const cur = await get<StoredQuote>(quoteId, quotesDb)
+      if (!cur) throw new Error('La cotización no existe')
+      if (cur.locked) throw new Error(LOCKED_MSG)
+      const next = (await get<number>(counterKey(year), metaDb)) ?? 1
+      if (seq >= next) await set(counterKey(year), seq + 1, metaDb)
+      await putQuote({ ...cur.quote, number: { ...cur.quote.number, seq, year } })
+    },
+    async findByNumber(seq, year) {
+      return (await listQuotes()).filter((s) => s.quote.number.seq === seq && s.quote.number.year === year)
+    },
     async getNext(year) {
       return (await get<number>(counterKey(year), metaDb)) ?? 1
     },

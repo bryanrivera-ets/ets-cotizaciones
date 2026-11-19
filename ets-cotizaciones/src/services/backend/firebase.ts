@@ -28,6 +28,8 @@ import {
   setDoc,
   updateDoc,
   writeBatch,
+  where,
+  getDocs,
   deleteField,
   type DocumentSnapshot,
   type Timestamp,
@@ -175,6 +177,25 @@ export const firebaseBackend: Backend = {
         tx.update(quoteRef, { number: { ...current, seq: next, year }, updatedAt: serverTimestamp(), updatedBy: me() })
         return next
       })
+    },
+    async setManual(quoteId, seq, year) {
+      const { db } = fb()
+      await runTransaction(db, async (tx) => {
+        const quoteRef = doc(db, 'quotes', quoteId)
+        const counterRef = doc(db, 'counters', String(year))
+        const [qs, cs] = await Promise.all([tx.get(quoteRef), tx.get(counterRef)])
+        if (!qs.exists()) throw new Error('La cotización todavía no está en la nube')
+        const d = qs.data() as QuoteDoc
+        if (d.locked) throw new Error('Esta versión fue reemplazada por una revisión y no se puede modificar.')
+        const next = cs.exists() ? (cs.data().next as number) : 1
+        if (seq >= next) tx.set(counterRef, { next: seq + 1, updatedAt: serverTimestamp(), updatedBy: me() })
+        tx.update(quoteRef, { number: { ...d.number, seq, year }, updatedAt: serverTimestamp(), updatedBy: me() })
+      })
+    },
+    async findByNumber(seq, year) {
+      const q = query(collection(fb().db, 'quotes'), where('number.seq', '==', seq), where('number.year', '==', year))
+      const snap = await getDocs(q)
+      return snap.docs.map((d) => toStored(d)!).filter(Boolean)
     },
     async getNext(year) {
       const s = await getDoc(doc(fb().db, 'counters', String(year)))

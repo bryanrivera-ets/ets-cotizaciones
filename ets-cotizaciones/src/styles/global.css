@@ -311,3 +311,7 @@ fieldset.editor__form:disabled { opacity: .85; }
 .ios-share::after { content: ''; position: absolute; left: 1px; top: -9px; width: 6px; height: 6px; border-left: 2px solid var(--navy); border-top: 2px solid var(--navy); transform: rotate(45deg); }
 .kbd { display: inline-block; padding: 0 6px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
 @media (display-mode: standalone) { .topbar { padding-top: max(10px, env(safe-area-inset-top)); } }
+.quote-no { flex-wrap: wrap; }
+.quote-no .hint, .quote-no .warning { flex-basis: 100%; }
+.quote-no__edit { display: inline-flex; align-items: center; gap: 6px; }
+.quote-no__edit input { width: 82px; text-align: center; font-weight: 700; font-size: 1.05rem; }

@@ -60,7 +60,9 @@ function DescriptionCell({ item }: { item: LineItem }) {
 function ItemRow({ item, first }: { item: LineItem; first: boolean }) {
   const cell = { justifyContent: 'center' as const, paddingHorizontal: 5, paddingVertical: 3 }
   return (
-    <View style={{ flexDirection: 'row', minHeight: 41.4, ...(first ? {} : { borderTopWidth: 0.5, ...BORDER }) }}>
+    // flexGrow: las filas se estiran hasta el alto del grupo (el precio puede ser más alto que el texto),
+    // así la línea entre DESCRIPTION y QTY/UNIT llega siempre hasta el borde de abajo
+    <View style={{ flexDirection: 'row', flexGrow: 1, minHeight: 41.4, ...(first ? {} : { borderTopWidth: 0.5, ...BORDER }) }}>
       <View style={{ ...cell, width: COLS[0], borderRightWidth: 0.5, ...BORDER }}>
         <DescriptionCell item={item} />
       </View>

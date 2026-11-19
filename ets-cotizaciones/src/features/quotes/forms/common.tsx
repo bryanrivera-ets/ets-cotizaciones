@@ -301,37 +301,97 @@ export function SystemPicker({
 
 /**
  * Muestra el número. Si todavía no tiene, se asigna solo al haber conexión;
- * "Reservar número" lo pide en ese momento (necesita internet).
+ * "Reservar número" lo pide en ese momento. "Editar" permite escribirlo a mano
+ * (avisa si ya existe y hace avanzar el contador para no repetirlo).
  */
 function QuoteNumberField({ quote }: { quote: Quote }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [seq, setSeq] = useState('')
+  const [year, setYear] = useState('')
+  const dateYear = Number(quote.header.date.slice(0, 4))
+  const offlineMsg = 'Sin conexión: el número se puede cambiar cuando vuelva el internet.'
+
   const reserve = async () => {
     setBusy(true)
     setError(null)
     try {
-      await backend.numbering.reserve(quote.id, Number(quote.header.date.slice(0, 4)))
+      await backend.numbering.reserve(quote.id, dateYear)
     } catch (e) {
-      setError(
-        navigator.onLine
-          ? `No se pudo reservar: ${(e as Error).message}`
-          : 'Sin conexión: el número se asignará solo cuando vuelva el internet.',
-      )
+      setError(navigator.onLine ? `No se pudo reservar: ${(e as Error).message}` : 'Sin conexión: el número se asignará solo cuando vuelva el internet.')
     } finally {
       setBusy(false)
     }
   }
+
+  const startEdit = () => {
+    setSeq(quote.number.seq !== null ? String(quote.number.seq) : '')
+    setYear(String(quote.number.seq !== null ? quote.number.year : dateYear))
+    setError(null)
+    setEditing(true)
+  }
+
+  const save = async () => {
+    const n = Number(seq)
+    const y = Number(year)
+    if (!Number.isInteger(n) || n < 1 || n > 9999) return setError('Escribe un número de secuencia válido (por ejemplo 453).')
+    if (!Number.isInteger(y) || y < 2000 || y > 2099) return setError('Escribe el año completo (por ejemplo 2026).')
+    if (n === quote.number.seq && y === quote.number.year) return setEditing(false)
+    const label = formatQuoteNumber({ seq: n, year: y, revision: 0 })
+    setBusy(true)
+    setError(null)
+    try {
+      const others = (await backend.numbering.findByNumber(n, y)).filter((s) => s.quote.id !== quote.id && !s.locked)
+      if (others.length) {
+        const list = others.map((s) => `• ${formatQuoteNumber(s.quote.number, s.quote.type === 'tm')} – ${s.quote.header.projectArea || 'sin proyecto'}`).join('\n')
+        if (!confirm(`El número ${label} ya lo usa:\n${list}\n\n¿Usarlo de todas formas?`)) return
+      }
+      await backend.numbering.setManual(quote.id, n, y)
+      void backend.changelog.add(
+        'counters',
+        `Numeración: cambió ${formatQuoteNumber(quote.number, quote.type === 'tm')} a ${formatQuoteNumber({ ...quote.number, seq: n, year: y }, quote.type === 'tm')} (${quote.header.projectArea || 'sin proyecto'})`,
+      )
+      setEditing(false)
+    } catch (e) {
+      setError(navigator.onLine ? `No se pudo cambiar el número: ${(e as Error).message}` : offlineMsg)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (editing)
+    return (
+      <div className="quote-no">
+        <div className="quote-no__edit">
+          <input aria-label="Secuencia" inputMode="numeric" value={seq} placeholder="453" onChange={(e) => setSeq(e.target.value.replace(/\D/g, ''))} />
+          <span>-</span>
+          <input aria-label="Año" inputMode="numeric" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, ''))} />
+          {quote.number.revision > 0 ? <span className="muted">REV {quote.number.revision}</span> : null}
+        </div>
+        <Button variant="primary" onClick={save} disabled={busy}>
+          {busy ? 'Guardando…' : 'Guardar'}
+        </Button>
+        <Button variant="ghost" onClick={() => setEditing(false)} disabled={busy}>
+          Cancelar
+        </Button>
+        <small className="hint">El contador avanza solo si el número es mayor, para que nunca se repita.</small>
+        {error ? <small className="warning">{error}</small> : null}
+      </div>
+    )
+
   return (
     <div className="quote-no">
       <output className="quote-no__value">{formatQuoteNumber(quote.number, quote.type === 'tm')}</output>
       {quote.number.seq === null ? (
-        <>
-          <Button onClick={reserve} disabled={busy}>
-            {busy ? 'Reservando…' : 'Reservar número'}
-          </Button>
-          <small className="hint">Sin número todavía: se asigna solo al haber conexión.</small>
-        </>
+        <Button onClick={reserve} disabled={busy}>
+          {busy ? 'Reservando…' : 'Reservar número'}
+        </Button>
       ) : null}
+      <Button variant="ghost" onClick={startEdit} disabled={busy} title="Escribir el número a mano">
+        ✎ Editar
+      </Button>
+      {quote.number.seq === null ? <small className="hint">Sin número todavía: se asigna solo al haber conexión, o escríbelo con Editar.</small> : null}
       {error ? <small className="warning">{error}</small> : null}
     </div>
   )

@@ -69,6 +69,13 @@ export interface Backend {
      * Si ya tenía número, lo devuelve sin gastar otro. Falla sin conexión.
      */
     reserve(quoteId: string, year: number): Promise<number>
+    /**
+     * Pone un número escrito a mano (secuencia y año). Si es igual o mayor que el contador,
+     * el contador avanza para que el número automático nunca lo repita. Falla sin conexión.
+     */
+    setManual(quoteId: string, seq: number, year: number): Promise<void>
+    /** Cotizaciones que ya usan ese número (para avisar antes de repetirlo). */
+    findByNumber(seq: number, year: number): Promise<StoredQuote[]>
     /** Próximo número que se asignará en ese año. */
     getNext(year: number): Promise<number>
     setNext(year: number, next: number): Promise<void>
