@@ -1,4 +1,5 @@
 import { CatalogSettings } from './CatalogSettings.tsx'
+import { ClientsSettings } from './ClientsSettings.tsx'
 import { ChangeLogSettings } from './ChangeLogSettings.tsx'
 import { NumberingSettings } from './NumberingSettings.tsx'
 import { ProfilesSettings } from './ProfilesSettings.tsx'
@@ -7,6 +8,7 @@ import { TermsSettings } from './TermsSettings.tsx'
 import { UsersSettings } from './UsersSettings.tsx'
 
 const TABS = [
+  { id: 'clientes', label: 'Clientes', el: <ClientsSettings /> },
   { id: 'sistemas', label: 'Sistemas', el: <SystemsSettings /> },
   { id: 'catalogo', label: 'Catálogo T&M', el: <CatalogSettings /> },
   { id: 'terminos', label: 'Términos', el: <TermsSettings /> },

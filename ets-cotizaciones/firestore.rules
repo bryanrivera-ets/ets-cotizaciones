@@ -52,11 +52,11 @@ service cloud.firestore {
       allow delete: if isAllowed() && !isLocked(resource.data);
     }
 
-    // Biblioteca: systems, materials, positions, terms, profiles, signers
+    // Biblioteca: systems, materials, positions, terms, profiles, signers, clients
     match /library/{key} {
       allow read: if isAllowed();
       allow write: if isAllowed()
-        && key in ['systems', 'materials', 'positions', 'terms', 'profiles', 'signers']
+        && key in ['systems', 'materials', 'positions', 'terms', 'profiles', 'signers', 'clients']
         && request.resource.data.items is list;
     }
 

@@ -1,5 +1,6 @@
-import { newScopeItem } from '../../../domain/factories.ts'
 import { defaultPdfFileName, formatQuoteNumber } from '../../../domain/format.ts'
+import { findClient, findContact } from '../../../domain/clients.ts'
+import { newId, newScopeItem } from '../../../domain/factories.ts'
 import { systemFromSection } from '../../../domain/library.ts'
 import type { ProposalTitle, Quote, QuoteStatus, RichLine, ScopeItem, ScopeLevel } from '../../../domain/types.ts'
 import { SCOPE_BULLETS } from '../../../domain/types.ts'
@@ -27,20 +28,7 @@ export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) 
         <Field label="Quote No." span2>
           {() => <QuoteNumberField quote={quote} />}
         </Field>
-        <Field label="Contact">{(id) => <TextInput id={id} value={h.contact} onChange={setH('contact')} placeholder="Eng. …" />}</Field>
-        <Field label="Email del contacto" hint="Para enviarle la cotización (no sale en el PDF)">
-          {(id) => (
-            <input
-              id={id}
-              type="email"
-              inputMode="email"
-              value={h.contactEmail ?? ''}
-              placeholder="nombre@empresa.com"
-              onChange={(e) => update((d) => void (d.header.contactEmail = e.target.value || undefined))}
-            />
-          )}
-        </Field>
-        <Field label="Contractor">{(id) => <TextInput id={id} value={h.contractor} onChange={setH('contractor')} />}</Field>
+        <ClientFields quote={quote} update={update} />
         <Field label="Project/Area" wide hint="Se imprime en mayúsculas">
           {(id) => <TextInput id={id} value={h.projectArea} onChange={setH('projectArea')} />}
         </Field>
@@ -394,5 +382,108 @@ function QuoteNumberField({ quote }: { quote: Quote }) {
       {quote.number.seq === null ? <small className="hint">Sin número todavía: se asigna solo al haber conexión, o escríbelo con Editar.</small> : null}
       {error ? <small className="warning">{error}</small> : null}
     </div>
+  )
+}
+
+// ───────────────────────── Contractor / contacto con la libreta de clientes ─────────────────────────
+
+/**
+ * Contractor con sugerencias de la libreta: al escoger un cliente se llenan el contacto y su email
+ * (solo si están vacíos). Al escoger un contacto se pone su email.
+ */
+function ClientFields({ quote, update }: { quote: Quote; update: Update }) {
+  const { library, update: updateLib } = useLibrary()
+  const clients = library.clients
+  const h = quote.header
+  const client = findClient(clients, h.contractor)
+  const contact = findContact(client, h.contact)
+
+  const setContractor = (v: string) =>
+    update((d) => {
+      d.header.contractor = v
+      const c = findClient(clients, v)
+      const first = c?.contacts[0]
+      if (c && first && !d.header.contact.trim()) {
+        d.header.contact = first.name
+        if (!d.header.contactEmail && first.email) d.header.contactEmail = first.email
+      }
+    })
+
+  const setContact = (v: string) =>
+    update((d) => {
+      d.header.contact = v
+      const ct = findContact(client, v)
+      // Pone el email del contacto escogido (si estaba vacío o era el de otro contacto del mismo cliente)
+      const wasOther = client?.contacts.some((x) => x.email && x.email === d.header.contactEmail)
+      if (ct?.email && (!d.header.contactEmail || wasOther)) d.header.contactEmail = ct.email
+    })
+
+  const canSave = h.contractor.trim() && (!client || (h.contact.trim() && !contact) || (contact && h.contactEmail && !contact.email))
+  const save = () => {
+    const ct = { id: newId(), name: h.contact.trim(), email: h.contactEmail?.trim() || undefined }
+    if (!client) {
+      updateLib('clients', (d) => {
+        d.push({ id: newId(), name: h.contractor.trim(), contacts: ct.name || ct.email ? [ct] : [] })
+        d.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
+      })
+    } else
+      updateLib('clients', (d) => {
+        const c = d.find((x) => x.id === client.id)
+        if (!c) return
+        const ex = c.contacts.find((x) => x.id === contact?.id)
+        if (ex) ex.email = ct.email
+        else c.contacts.push(ct)
+      })
+  }
+
+  return (
+    <>
+      <Field label="Contractor" hint={client ? `✓ En tu libreta de clientes${client.terms ? ` · ${client.terms}` : ''}` : 'Escribe para buscar en tus clientes'}>
+        {(id) => (
+          <>
+            <input id={id} list="ets-clients" autoComplete="off" value={h.contractor} onChange={(e) => setContractor(e.target.value)} />
+            <datalist id="ets-clients">
+              {clients.map((c) => (
+                <option key={c.id} value={c.name} />
+              ))}
+            </datalist>
+          </>
+        )}
+      </Field>
+      <Field label="Contact" hint={client && client.contacts.length > 1 ? `${client.contacts.length} contactos guardados: escoge uno` : undefined}>
+        {(id) => (
+          <>
+            <input id={id} list="ets-client-contacts" autoComplete="off" value={h.contact} placeholder="Eng. …" onChange={(e) => setContact(e.target.value)} />
+            <datalist id="ets-client-contacts">
+              {(client?.contacts ?? []).map((c) => (
+                <option key={c.id} value={c.name}>
+                  {[c.title, c.email].filter(Boolean).join(' · ')}
+                </option>
+              ))}
+            </datalist>
+          </>
+        )}
+      </Field>
+      <Field label="Email del contacto" hint="Para enviarle la cotización (no sale en el PDF)">
+        {(id) => (
+          <input
+            id={id}
+            type="email"
+            inputMode="email"
+            value={h.contactEmail ?? ''}
+            placeholder="nombre@empresa.com"
+            onChange={(e) => update((d) => void (d.header.contactEmail = e.target.value || undefined))}
+          />
+        )}
+      </Field>
+      {canSave ? (
+        <div className="field field--wide contractor-hint">
+          <span>{!client ? `"${h.contractor.trim()}" no está en tu libreta de clientes.` : contact ? 'Este email no está en la libreta.' : `"${h.contact.trim()}" no está entre los contactos de ${client.name}.`}</span>
+          <button type="button" className="link" onClick={save}>
+            + Guardar en clientes
+          </button>
+        </div>
+      ) : null}
+    </>
   )
 }

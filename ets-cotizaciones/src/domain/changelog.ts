@@ -11,6 +11,7 @@ export const COLLECTION_LABEL: Record<string, string> = {
   terms: 'Términos',
   profiles: 'Perfiles',
   signers: 'Firmantes',
+  clients: 'Clientes',
   users: 'Usuarios',
   counters: 'Numeración',
 }
@@ -34,9 +35,12 @@ export function diffSummary<K extends LibraryKey>(key: K, before: Library[K], af
   const orderChanged =
     !added.length && !removed.length && !changed.length && JSON.stringify([...b.keys()]) !== JSON.stringify([...a.keys()])
   const parts: string[] = []
-  if (added.length) parts.push(`agregó ${added.map((i) => labelOf(i)).join(', ')}`)
-  if (removed.length) parts.push(`eliminó ${removed.map((i) => labelOf(i)).join(', ')}`)
-  if (changed.length) parts.push(`modificó ${changed.map((i) => labelOf(i)).join(', ')}`)
+  // En cambios grandes (ej. importar 200 clientes) se nombran solo los primeros
+  const names = (list: Item[]) =>
+    list.length > 5 ? `${list.slice(0, 5).map(labelOf).join(', ')} y ${list.length - 5} más` : list.map(labelOf).join(', ')
+  if (added.length) parts.push(`agregó ${names(added)}`)
+  if (removed.length) parts.push(`eliminó ${names(removed)}`)
+  if (changed.length) parts.push(`modificó ${names(changed)}`)
   if (orderChanged) parts.push('cambió el orden')
   return parts.length ? `${COLLECTION_LABEL[key]}: ${parts.join('; ')}` : null
 }
