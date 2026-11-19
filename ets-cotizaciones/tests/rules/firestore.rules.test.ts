@@ -97,6 +97,7 @@ describe('usuario autorizado', () => {
   it('biblioteca: solo colecciones conocidas y con lista de items', async () => {
     const db = as(ALLOWED)
     await assertSucceeds(setDoc(doc(db, 'library', 'terms'), { items: [] }))
+    await assertSucceeds(setDoc(doc(db, 'library', 'clients'), { items: [] }))
     await assertFails(setDoc(doc(db, 'library', 'cualquiera'), { items: [] }))
     await assertFails(setDoc(doc(db, 'library', 'systems'), { items: 'no es lista' }))
   })

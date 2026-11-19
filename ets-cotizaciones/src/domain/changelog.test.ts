@@ -27,6 +27,13 @@ describe('diffSummary', () => {
     expect(diffSummary('profiles', lib.profiles, after)).toBe('Perfiles: modificó "Otro Nombre (DMR)"')
   })
 
+  it('en cambios grandes nombra solo los primeros', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ id: `c${i}`, name: `Cliente ${i}`, contacts: [] }))
+    expect(diffSummary('clients', [], many)).toBe(
+      'Clientes: agregó "Cliente 0", "Cliente 1", "Cliente 2", "Cliente 3", "Cliente 4" y 7 más',
+    )
+  })
+
   it('detecta solo un cambio de orden', () => {
     const after = structuredClone(lib.positions).reverse()
     expect(diffSummary('positions', lib.positions, after)).toBe('Catálogo: posiciones: cambió el orden')

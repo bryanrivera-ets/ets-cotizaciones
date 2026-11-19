@@ -315,3 +315,13 @@ fieldset.editor__form:disabled { opacity: .85; }
 .quote-no .hint, .quote-no .warning { flex-basis: 100%; }
 .quote-no__edit { display: inline-flex; align-items: center; gap: 6px; }
 .quote-no__edit input { width: 82px; text-align: center; font-weight: 700; font-size: 1.05rem; }
+
+/* ───────── Clientes ───────── */
+.master__list--tall { max-height: 70vh; }
+.import-preview { border: 2px solid var(--navy); border-radius: var(--radius); padding: 12px 14px; margin-top: 10px; background: #f6f9fd; }
+.import-preview h4 { margin-top: 0; }
+.import-preview select { width: auto; margin-left: 6px; }
+.import-preview__stats { margin: 8px 0 12px; padding-left: 20px; line-height: 1.7; }
+.contact-row { display: grid; grid-template-columns: 1.3fr .8fr 1.3fr 1fr auto; gap: 6px; margin-bottom: 6px; }
+@container (max-width: 700px) { .contact-row { grid-template-columns: 1fr 1fr; } .contact-row > :first-child { grid-column: 1 / -1; } }
+.contractor-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .78rem; color: var(--muted); }

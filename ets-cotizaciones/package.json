@@ -27,7 +27,8 @@
     "immer": "^11.2.10",
     "pdfjs-dist": "^6.5.438",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "read-excel-file": "^9.3.19"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",

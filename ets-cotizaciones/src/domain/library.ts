@@ -3,6 +3,7 @@
  * Las cotizaciones guardan COPIAS de lo que usan, así que editar la biblioteca
  * nunca cambia una cotización existente.
  */
+import type { Client } from './clients.ts'
 import { newId } from './factories.ts'
 import { SEED_MATERIALS, SEED_POSITIONS } from './seed/catalog.ts'
 import { SEED_PROFILES } from './seed/profiles.ts'
@@ -31,11 +32,13 @@ export interface Library {
   terms: TermsVersion[]
   profiles: UserProfile[]
   signers: Signer[]
+  /** Libreta de clientes (contractors) */
+  clients: Client[]
 }
 
 export type LibraryKey = keyof Library
 
-export const LIBRARY_KEYS: LibraryKey[] = ['systems', 'materials', 'positions', 'terms', 'profiles', 'signers']
+export const LIBRARY_KEYS: LibraryKey[] = ['systems', 'materials', 'positions', 'terms', 'profiles', 'signers', 'clients']
 
 export function defaultLibrary(): Library {
   return structuredClone({
@@ -45,6 +48,7 @@ export function defaultLibrary(): Library {
     terms: SEED_TERMS,
     profiles: SEED_PROFILES,
     signers: SEED_SIGNERS,
+    clients: [] as Client[],
   })
 }
 
