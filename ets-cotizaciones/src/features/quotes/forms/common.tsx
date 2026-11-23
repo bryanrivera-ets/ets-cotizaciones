@@ -2,6 +2,7 @@ import { defaultPdfFileName, formatQuoteNumber } from '../../../domain/format.ts
 import { findClient, findContact } from '../../../domain/clients.ts'
 import { newId, newScopeItem } from '../../../domain/factories.ts'
 import { systemFromSection } from '../../../domain/library.ts'
+import { termsCustomized } from '../../../domain/terms.ts'
 import type { ProposalTitle, Quote, QuoteStatus, RichLine, ScopeItem, ScopeLevel } from '../../../domain/types.ts'
 import { SCOPE_BULLETS } from '../../../domain/types.ts'
 import { Button, Card, Field, RowActions, Select, TextInput } from '../../../ui/controls.tsx'
@@ -91,12 +92,13 @@ export function HeaderForm({ quote, update }: { quote: Quote; update: Update }) 
             <Select
               id={id}
               value={quote.terms.id}
-              onChange={(v) =>
-                update((d) => {
-                  const t = SEED_TERMS.find((x) => x.id === v)
-                  if (t) d.terms = structuredClone(t)
-                })
-              }
+              onChange={(v) => {
+                const t = SEED_TERMS.find((x) => x.id === v)
+                if (!t) return
+                const changed = termsCustomized(quote.terms, SEED_TERMS.find((x) => x.id === quote.terms.id))
+                if (changed && !confirm('Los términos de esta cotización tienen cambios. Al escoger otra versión se pierden. ¿Continuar?')) return
+                update((d) => void (d.terms = structuredClone(t)))
+              }}
               options={[
                 ...(SEED_TERMS.some((t) => t.id === quote.terms.id) ? [] : [{ value: quote.terms.id, label: `${quote.terms.name} (copia guardada)` }]),
                 ...SEED_TERMS.map((t) => ({ value: t.id, label: t.name })),

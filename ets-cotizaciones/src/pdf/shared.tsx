@@ -3,6 +3,7 @@ import type { Style } from '@react-pdf/stylesheet'
 import { brand } from '../domain/brand.ts'
 import type { ScopeItem, TermsLine } from '../domain/types.ts'
 import { signatureFontOf } from './signatureFonts.ts'
+import { visibleTermsLines } from '../domain/terms.ts'
 
 /** Recursos que dependen del entorno (URL en navegador, ruta en Node). */
 export interface PdfAssets {
@@ -96,7 +97,7 @@ export function TermsBlock({ lines, layout }: { lines: TermsLine[]; layout: Term
   const { fontFamily, fontSize, lineHeight, bulletIndent, textIndent, noBulletIndent } = layout
   return (
     <View>
-      {lines.map((line) => {
+      {visibleTermsLines(lines).map((line) => {
         const size = line.size === 'large' ? fontSize + 1 : fontSize
         const lh = line.size === 'large' ? lineHeight * 1.1 : lineHeight
         const text = (

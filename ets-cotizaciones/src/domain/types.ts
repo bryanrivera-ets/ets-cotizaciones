@@ -23,6 +23,8 @@ export interface TermsLine {
   bulletColor?: string
   /** "large" para "Important Note" */
   size?: 'normal' | 'large'
+  /** Desactivada en esta cotización: no sale en el PDF */
+  hidden?: boolean
 }
 
 export interface TermsVersion {
