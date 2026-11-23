@@ -1,17 +1,10 @@
 import { useState } from 'react'
-import { brand } from '../../domain/brand.ts'
 import { newId } from '../../domain/factories.ts'
 import { SEED_TERMS } from '../../domain/seed/terms.ts'
-import type { TermsLine, TextRun } from '../../domain/types.ts'
-import { Button, Card, Field, RowActions, Select, TextArea, TextInput } from '../../ui/controls.tsx'
-import { move } from '../../ui/list.ts'
+import type { TermsLine } from '../../domain/types.ts'
+import { Button, Card, Field, Select, TextInput } from '../../ui/controls.tsx'
+import { TermsLinePreview, TermsLinesEditor } from '../terms/TermsLinesEditor.tsx'
 import { useLibrary } from '../library/context.ts'
-
-const COLORS = [
-  { value: '', label: 'Negro' },
-  { value: brand.colors.termsBlue, label: 'Azul' },
-  { value: brand.colors.red, label: 'Rojo' },
-]
 
 export function TermsSettings() {
   const { library, update, replace } = useLibrary()
@@ -21,7 +14,6 @@ export function TermsSettings() {
   const version = vi >= 0 ? versions[vi] : undefined
 
   const upLines = (fn: (lines: TermsLine[]) => void) => update('terms', (d) => fn(d[vi].lines))
-  const upRun = (li: number, ri: number, fn: (r: TextRun) => void) => upLines((ls) => fn(ls[li].runs[ri]))
 
   const duplicate = () => {
     if (!version) return
@@ -70,76 +62,7 @@ export function TermsSettings() {
               Cada línea puede tener varias partes con formato distinto (ej. texto normal + un enlace). Los cambios se guardan solos; las
               cotizaciones existentes no cambian.
             </p>
-            {version.lines.map((line, li) => (
-              <div key={line.id} className="term-line">
-                <div className="term-line__head">
-                  <strong>{li + 1}</strong>
-                  <label className="check">
-                    <input type="checkbox" checked={line.bullet} onChange={(e) => upLines((ls) => void (ls[li].bullet = e.target.checked))} />
-                    Viñeta
-                  </label>
-                  {line.bullet ? (
-                    <Select
-                      ariaLabel="Color de la viñeta"
-                      value={line.bulletColor ?? ''}
-                      options={COLORS.map((c) => ({ ...c, label: `Viñeta: ${c.label}` }))}
-                      onChange={(v) => upLines((ls) => void (ls[li].bulletColor = v || undefined))}
-                    />
-                  ) : null}
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={line.size === 'large'}
-                      onChange={(e) => upLines((ls) => void (ls[li].size = e.target.checked ? 'large' : undefined))}
-                    />
-                    Letra más grande
-                  </label>
-                  <RowActions
-                    label="línea"
-                    index={li}
-                    count={version.lines.length}
-                    onMove={(a, b) => upLines((ls) => move(ls, a, b))}
-                    onRemove={() => upLines((ls) => void ls.splice(li, 1))}
-                  />
-                </div>
-                {line.runs.map((run, ri) => (
-                  <div key={ri} className="term-run">
-                    <TextArea ariaLabel={`Texto de la línea ${li + 1}, parte ${ri + 1}`} rows={1} value={run.text} onChange={(v) => upRun(li, ri, (r) => void (r.text = v))} />
-                    <div className="term-run__tools">
-                      <label className="check" title="Negrita">
-                        <input type="checkbox" checked={!!run.bold} onChange={(e) => upRun(li, ri, (r) => void (r.bold = e.target.checked || undefined))} />
-                        <b>N</b>
-                      </label>
-                      <label className="check" title="Itálica">
-                        <input type="checkbox" checked={!!run.italic} onChange={(e) => upRun(li, ri, (r) => void (r.italic = e.target.checked || undefined))} />
-                        <i>I</i>
-                      </label>
-                      <Select ariaLabel="Color del texto" value={run.color ?? ''} options={COLORS} onChange={(v) => upRun(li, ri, (r) => void (r.color = v || undefined))} />
-                      <TextInput
-                        className="term-run__link"
-                        ariaLabel="Enlace (email)"
-                        placeholder="Enlace: mailto:…"
-                        value={run.href ?? ''}
-                        onChange={(v) => upRun(li, ri, (r) => void (r.href = v.trim() || undefined))}
-                      />
-                      <button
-                        type="button"
-                        className="icon-btn icon-btn--danger"
-                        aria-label="Eliminar esta parte"
-                        disabled={line.runs.length === 1}
-                        onClick={() => upLines((ls) => void ls[li].runs.splice(ri, 1))}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="ghost" onClick={() => upLines((ls) => void ls[li].runs.push({ text: '' }))}>
-                  + Parte con otro formato
-                </Button>
-              </div>
-            ))}
-            <Button onClick={() => upLines((ls) => void ls.push({ id: newId(), bullet: true, runs: [{ text: '' }] }))}>+ Agregar línea</Button>
+            <TermsLinesEditor lines={version.lines} update={upLines} />
           </Card>
 
           <Card title="Así se verá">
@@ -148,21 +71,7 @@ export function TermsSettings() {
               {version.lines.map((line) => (
                 <div key={line.id} className={`terms-preview__line${line.bullet ? '' : ' terms-preview__line--plain'}${line.size === 'large' ? ' large' : ''}`}>
                   {line.bullet ? <span className="terms-preview__bullet" style={{ background: line.bulletColor ?? '#000' }} /> : null}
-                  <span>
-                    {line.runs.map((r, i) => (
-                      <span
-                        key={i}
-                        style={{
-                          fontWeight: r.bold ? 700 : 400,
-                          fontStyle: r.italic ? 'italic' : 'normal',
-                          color: r.href ? '#0462c1' : (r.color ?? '#000'),
-                          textDecoration: r.href ? 'underline' : 'none',
-                        }}
-                      >
-                        {r.text}
-                      </span>
-                    ))}
-                  </span>
+                  <TermsLinePreview line={line} />
                 </div>
               ))}
             </div>

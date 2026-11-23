@@ -11,6 +11,7 @@ import { EmailDialog } from './EmailDialog.tsx'
 import { Button } from '../../ui/controls.tsx'
 import type { Update } from './editorTypes.ts'
 import { HeaderForm } from './forms/common.tsx'
+import { QuoteTermsCard } from './forms/QuoteTermsCard.tsx'
 import { LumpSumForm } from './forms/LumpSumForm.tsx'
 import { PremiumTimeForm } from './forms/PremiumTimeForm.tsx'
 import { TmForm } from './forms/TmForm.tsx'
@@ -219,6 +220,7 @@ export function QuoteEditorPage({ id, navigate }: { id: string; navigate: (path:
           ) : (
             <TmForm quote={quote} update={update as Update<TmQuote>} />
           )}
+          <QuoteTermsCard quote={quote} update={update} />
         </fieldset>
         <aside className="editor__preview" aria-label="Vista previa del PDF">
           {pdfError ? <p className="warning">Error al generar el PDF: {pdfError}</p> : null}
